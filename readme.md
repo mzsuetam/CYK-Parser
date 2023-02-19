@@ -21,10 +21,10 @@ The path can be specified by flag  _-path_ with a path to file as parameter
 
 File consist of four lines:
  
-1. \<size T> \<size of N> \<size of P> S
-2. \<list of terminals separated by space>
-3. \<list of non-terminals separated by space>
-4. \<list of productions separated by space>
+1. list of terminals separated by space
+2. list of non-terminals separated by space
+3. list of productions separated by space
+4. start symbol (non-terminal)
 
 Terminal _t_ is represented by single [a-z] char, \
 a non-terminal _N_ is represented by a single [A-Z] char \

@@ -75,7 +75,7 @@ class Grammar{
         }
 
         std::string val = str.substr(0,d);
-        str = ( str.length() == 1 ) ? "" : str.substr(d+1);
+        str = ( str.length() == 1 || d == std::string::npos ) ? "" : str.substr(d+1);
         return val;
     }
 
@@ -89,30 +89,28 @@ class Grammar{
         try{
             std::string line;
 
-            // first line - no. terminals, no. non terminals
+            // first line - terminals
             getline(in, line);
-            int t = std::stoi( getFirstString(line) );
-            int nt = std::stoi( getFirstString(line) );
-            int p = std::stoi( getFirstString(line) );
-            startingSymbol = getFirstChar(line);
-
-            // second line - terminals
-            getline(in, line);
-            for ( int i=0; i<t; i++ ){
+            while ( line.length() > 0 ){
                 terminals.insert(checkTerminal(getFirstChar(line)));
             }
 
-            // third line - non-terminals
+            // second line - non-terminals
             getline(in, line);
-            for ( int i=0; i<nt; i++ ){
+            while ( line.length() > 0 ){
                 nonTerminals.insert(checkNonTerminal(getFirstChar(line)));
             }
 
-            // fourth line - productions
+            // third line - productions
             getline(in, line);
-            for ( int i=0; i<p; i++ ){
+            while ( line.length() > 0 ){
                 productions.insert(checkProduction(getFirstString(line)));
             }
+
+            // last line - starting symbol
+            getline(in, line);
+            if ( line.length() != 1 || nonTerminals.find( line.at(0) ) == nonTerminals.end() ) throw ModelException("Grammar starting symbol invalid!");
+            startingSymbol = getFirstChar(line);
 
         }
         catch ( ... ) {

@@ -1,4 +1,4 @@
-2 4 5 S
 a b
-A B C S s
+A B C S
 S>AC C>SB S>AB A>a B>b
+S
