@@ -1,4 +1,4 @@
-# CYK algorithm
+# CYK Parser
 
 Cocke–Younger–Kasami (CYK) algorithm - parsing algorithm
 for context-free grammars. This (standard) version of CYK operates on
