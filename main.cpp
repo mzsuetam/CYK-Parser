@@ -3,6 +3,9 @@
 #include <set>
 #include <cstring>
 #include <utility>
+#include <csignal>
+#include <vector>
+#include <map>
 
 class ModelException : public std::exception {
     std::string message;
@@ -19,7 +22,7 @@ public:
 class Grammar{
     std::set<char> terminals;
     std::set<char> nonTerminals;
-    std::set< std::string > productions;
+    std::set< std::pair<char,std::string>> productions;
     char startingSymbol;
 
     static char checkTerminal(char c){
@@ -42,7 +45,7 @@ class Grammar{
         return c;
     }
 
-    std::string checkProduction(const std::string &str){
+    std::pair<char, std::string> checkProduction(const std::string &str){
         size_t d = str.find('>');
         size_t l = str.length();
         if ( l>=2 && l<=4 && d==1 ){
@@ -52,7 +55,7 @@ class Grammar{
                     || ( l==4 && nonTerminals.find( str.at(2) ) != nonTerminals.end()
                         && nonTerminals.find( str.at(3) ) != nonTerminals.end() )
                     ){
-                    return str;
+                    return {str.at(0), str.substr(2)};
                 }
             }
         }
@@ -104,7 +107,8 @@ class Grammar{
             // third line - productions
             getline(in, line);
             while ( line.length() > 0 ){
-                productions.insert(checkProduction(getFirstString(line)));
+                auto prod = checkProduction(getFirstString(line));
+                productions.insert(prod);
             }
 
             // last line - starting symbol
@@ -139,7 +143,7 @@ public:
         }
         N = N.substr(0, N.length()-1);
         for ( const auto &p : productions ){
-            P.append(p).append(",");
+            P.append(&p.first).append(">").append(p.second).append(",");
         }
         P = P.substr(0, P.length()-1);
         S = startingSymbol;
@@ -150,7 +154,73 @@ public:
         << std::endl << "\tS=" + S
         << std::endl;
     }
+
+    void printTab(std::vector< std::vector < std::set<char>* >* >* tab, const std::string &str){
+        int i=0;
+        for ( const auto &v1 : *tab ){
+            std::cout << "|" + str.substr(i,1) + "\t|";
+            i++;
+            for ( const auto &v2 : *v1 ){
+                for ( const auto &c : *v2 ){
+                    std::cout << c;
+                }
+                std::cout << " \t|";
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    bool checkIfElementOfLanguage(const std::string &str){
+        // CYK algorithm
+
+        for ( const auto &c : str ){
+            if ( terminals.find(c) == terminals.end() ) return false;
+        }
+
+        auto tab = new std::vector< std::vector < std::set<char>* >* > ();
+        for ( int i=0; i<str.length(); i++ ){
+            tab->push_back(new std::vector<std::set<char>*>());
+            for ( int j=0; j< str.length(); j++ ){
+                tab->at(i)->push_back(new std::set<char>());
+            }
+        }
+
+        for ( int i=0; i<str.length(); i++ ) {
+            for ( const auto &p : productions ){
+                if ( p.second.length() == 1 && p.second.at(0) == str.at(i) ){
+                    tab->at(i)->at(0)->insert(p.first);
+                }
+            }
+        }
+
+        int n = str.length();
+        for ( int i=2; i<=n; i++ ){
+            for ( int j=1; j<=n-i+1; j++ ){
+                for ( int k=1; k<=i-1; k++){
+//                    std::cout << i << j << k << " | j k " << j-1 << k-1 << " | j+k i-k " << j+k-1 << i-k-1 << std::endl;
+                    for ( const auto &p : productions ){
+                        if ( p.second.length() == 2
+                            && tab->at(j-1)->at(k-1)->find(p.second.at(0)) != tab->at(j-1)->at(k-1)->end()
+                            && tab->at(j+k-1)->at(i-k-1)->find(p.second.at(1)) != tab->at(j+k-1)->at(i-k-1)->end()
+                            ){
+                            tab->at(j-1)->at(i-1)->insert(p.first);
+                        }
+                    }
+                }
+            }
+        }
+        printTab(tab, str);
+        if ( tab->at(0)->at(n-1)->find(startingSymbol) != tab->at(0)->at(n-1)->end() ){
+            return true;
+        }
+        return false;
+    }
 };
+
+void sigHandler(int s){
+//    printf("Caught signal %d\n",s);
+    exit(1);
+}
 
 int main(int argc, char *argv[]) {
 
@@ -165,8 +235,26 @@ int main(int argc, char *argv[]) {
     auto grammar = new Grammar(path);
     grammar->print();
 
+    struct sigaction sigIntHandler{};
+    sigIntHandler.sa_handler = sigHandler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, nullptr);
 
+    std::cout << "Type !q or press CTRL-C to exit." << std::endl;
 
+    std::cout << grammar->checkIfElementOfLanguage("aabbb") << std::endl;
+    return 0;
+
+    std::string word;
+    do {
+        std::cout << "Word to be checked: ";
+        std::cin >> word;
+
+        std::cout << "'" << word << "' " << ( grammar->checkIfElementOfLanguage(word) ? "belongs" : "does not belong" )
+        << " to the language" << std::endl;
+
+    } while ( word != "!q" );
 
     return 0;
 }
