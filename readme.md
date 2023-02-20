@@ -1,9 +1,7 @@
 # CYK algorithm
 
-Cocke–Younger–Kasami algorithm is a parsing algorithm
-for context-free grammars.
-
-This (standard) version of CYK operates on
+Cocke–Younger–Kasami (CYK) algorithm - parsing algorithm
+for context-free grammars. This (standard) version of CYK operates on
 context-free grammars given in Chomsky normal form (CNF).
 
 ### Context free grammar
@@ -17,7 +15,7 @@ S - start symbol
 ### Grammar file
 
 By default, grammar file is read from ./grammar.txt.
-The path can be specified by flag  _-path_ with a path to file as parameter
+The path can be specified by flag  _-path_ with a path to file as parameter.
 
 File consist of four lines:
  
