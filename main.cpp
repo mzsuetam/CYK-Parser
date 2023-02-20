@@ -155,16 +155,20 @@ public:
         << std::endl;
     }
 
-    void printTab(std::vector< std::vector < std::set<char>* >* >* tab, const std::string &str){
-        int i=0;
-        for ( const auto &v1 : *tab ){
-            std::cout << "|" + str.substr(i,1) + "\t|";
-            i++;
-            for ( const auto &v2 : *v1 ){
-                for ( const auto &c : *v2 ){
+    static void printTab(std::vector< std::vector < std::set<char>* >* >* tab, const std::string &str){
+        int n=str.length();
+        for ( int i=0; i<n; i++ ) {
+            std::cout << "\t" << str.substr(i,1) + "\t|";
+        }
+        std::cout << std::endl;
+        for ( int i=0; i<n; i++ ){
+            for ( int j=0; j<n; j++ ){
+                std::cout << "\t";
+                for ( const auto &c : *tab->at(j)->at(i) ){
                     std::cout << c;
                 }
-                std::cout << " \t|";
+                if ( tab->at(j)->at(i)->empty() &&  i + j < n ) std::cout << '-';
+                if ( i + j < n ) std::cout << "\t|";
             }
             std::cout << std::endl;
         }
@@ -243,15 +247,15 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Type !q or press CTRL-C to exit." << std::endl;
 
-    std::cout << grammar->checkIfElementOfLanguage("aabbb") << std::endl;
-    return 0;
+//    std::cout << grammar->checkIfElementOfLanguage("aabbb") << std::endl;
 
     std::string word;
     do {
         std::cout << "Word to be checked: ";
         std::cin >> word;
 
-        std::cout << "'" << word << "' " << ( grammar->checkIfElementOfLanguage(word) ? "belongs" : "does not belong" )
+        auto belongs = grammar->checkIfElementOfLanguage(word);
+        std::cout << "'" << word << "' " << ( belongs ? "BELONGS" : "DOES NOT BELONG" )
         << " to the language" << std::endl;
 
     } while ( word != "!q" );
